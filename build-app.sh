@@ -1,8 +1,14 @@
 #!/bin/bash
 # Builds Audio6.app (native Apple Silicon) into ./build
 # The app icon (Resources/Icon.icon from Icon Composer) needs Xcode 26+ (actool).
+#
+# The version (CFBundleShortVersionString) is read from the VERSION file.
+# BUILD_NUMBER (env) sets CFBundleVersion; defaults to the version.
 set -euo pipefail
 cd "$(dirname "$0")"
+
+VERSION="$(tr -d '[:space:]' < VERSION)"
+BUILD_NUMBER="${BUILD_NUMBER:-$VERSION}"
 
 swift build -c release
 
@@ -26,7 +32,7 @@ else
     echo "No Resources/Icon.icon found - building without an app icon"
 fi
 
-cat > "$APP/Contents/Info.plist" <<'EOF'
+cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -35,7 +41,8 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
     <key>CFBundleIdentifier</key><string>local.audio6</string>
     <key>CFBundleName</key><string>Audio6</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>CFBundleShortVersionString</key><string>$VERSION</string>
+    <key>CFBundleVersion</key><string>$BUILD_NUMBER</string>
     <key>CFBundleIconName</key><string>Icon</string>
     <key>CFBundleIconFile</key><string>Icon</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
@@ -46,4 +53,4 @@ EOF
 
 codesign --force --sign - "$APP"
 touch "$APP"   # nudge Finder to pick up the new icon
-echo "Built $APP - drag it to /Applications"
+echo "Built $APP $VERSION ($BUILD_NUMBER) - drag it to /Applications"

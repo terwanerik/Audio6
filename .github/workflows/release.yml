@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # macOS 26 image: Xcode 26+ is needed to compile the Icon Composer icon.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history and tags, for the release notes
+
+      - name: Check tag matches VERSION
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          if [ "${TAG#v}" != "$VERSION" ]; then
+            echo "::error::Tag $TAG does not match VERSION file ($VERSION)"
+            exit 1
+          fi
+
+      - name: Build app
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: ./build-app.sh
+
+      - name: Zip app
+        run: ditto -c -k --keepParent build/Audio6.app build/Audio6.zip
+
+      - name: Write release notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          PREV=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || true)
+          if [ -n "$PREV" ]; then
+            RANGE="$PREV..$TAG"
+            echo "## Changes since $PREV" > notes.md
+          else
+            RANGE="$TAG"
+            echo "## Changes" > notes.md
+          fi
+          echo >> notes.md
+          git log --no-merges --pretty='- %s (%h)' "$RANGE" >> notes.md
+          if [ -n "$PREV" ]; then
+            echo >> notes.md
+            echo "**Full changelog:** https://github.com/${{ github.repository }}/compare/$PREV...$TAG" >> notes.md
+          fi
+          cat notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" build/Audio6.zip \
+            --title "Audio6 ${TAG#v}" \
+            --notes-file notes.md

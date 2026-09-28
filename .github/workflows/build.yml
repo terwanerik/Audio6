@@ -1,0 +1,24 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build:
+    # macOS 26 image: Xcode 26+ is needed to compile the Icon Composer icon.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app
+        run: ./build-app.sh
+
+      - name: Zip app
+        run: ditto -c -k --keepParent build/Audio6.app build/Audio6.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Audio6
+          path: build/Audio6.zip

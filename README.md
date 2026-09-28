@@ -9,6 +9,10 @@ both live and as the power-on (startup) configuration — no Rosetta, no
 bundled kernel extension, just a small status bar app talking directly to the
 device over USB.
 
+<p align="center">
+  <img src="screenshot.png" alt="Audio6 menu bar panel showing Live/Startup tabs, per-channel input and thru controls, and the device picker" width="388">
+</p>
+
 ## Features
 
 - Menu bar control, no Dock icon or main window
@@ -25,6 +29,14 @@ device over USB.
 - A Native Instruments Traktor Audio 6 interface
 
 ## Install / run
+
+Download `Audio6.zip` from the latest
+[release](../../releases/latest), unzip it and move `Audio6.app` to
+`/Applications`. The app is ad-hoc signed, not notarized, so on first launch
+right-click it and choose **Open** (or run
+`xattr -dr com.apple.quarantine /Applications/Audio6.app`).
+
+To build it yourself (needs Xcode 26+ for the icon):
 
 ```sh
 ./build-app.sh && open build/Audio6.app
@@ -52,8 +64,22 @@ implementation of the same protocol.
   requests.
 - `Sources/Audio6/` — the SwiftUI menu bar app.
 - `Resources/Icon.icon` — Icon Composer app icon.
+- `VERSION` — the app version (marketing version).
 - `build-app.sh` — builds `build/Audio6.app` (bundles Info.plist, icon, and
   ad-hoc code signing).
+
+## Releases
+
+CI builds the app on every push and pull request. To make a release, set the
+new version in `VERSION`, commit it, and push a matching tag:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+The release workflow checks that the tag matches `VERSION`, builds the app,
+and publishes a GitHub release with the zipped app. The release notes list
+the commits since the previous tag.
 
 ## Status
 

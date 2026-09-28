@@ -37,8 +37,14 @@ Vendor control requests on endpoint 0, device recipient. Vendor ID 0x17CC.
   shadowless `MenuPanel` attached under the menu bar; SwiftUI `ContentView`
   with Live / Startup tabs, per-channel input picker + thru toggle, device picker.
 - `Resources/Icon.icon` - Icon Composer app icon (compiled by actool, Xcode 26).
+- `VERSION` - app marketing version (CFBundleShortVersionString).
 - `build-app.sh` - builds `build/Audio6.app` (Info.plist with LSUIElement,
-  icon, ad-hoc codesign).
+  icon, ad-hoc codesign). Version from `VERSION`; `BUILD_NUMBER` env sets
+  CFBundleVersion.
+- `.github/workflows/build.yml` - builds on every push/PR (macos-26 runner).
+- `.github/workflows/release.yml` - on `v*` tag push: fails unless the tag
+  matches `VERSION`, builds, creates a GitHub release with `Audio6.zip` and notes from the
+  commits since the previous tag.
 
 ## Build / run
 
@@ -52,5 +58,6 @@ Vendor control requests on endpoint 0, device recipient. Vendor ID 0x17CC.
 - Earlier version showed "not connected" even with the device plugged in;
   the device lookup was rewritten and a device picker + error text was added.
   Verify it now connects.
-- New status-item panel (replacing MenuBarExtra) and icon build step are untested.
+- Status-item popover works. Don't close NSStatusBarWindow at launch: the
+  button moves to an off-screen window and NSPopover silently won't show.
 - Confirm phono/line value mapping.
